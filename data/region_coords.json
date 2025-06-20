@@ -1,0 +1,102 @@
+[
+    {
+        "region": "Abruzzo",
+        "lat": 42.2196843643,
+        "lng": 13.9614552189
+    },
+    {
+        "region": "Basilicata",
+        "lat": 40.457225965,
+        "lng": 16.0135581211
+    },
+    {
+        "region": "Calabria",
+        "lat": 38.9604402158,
+        "lng": 16.2816270665
+    },
+    {
+        "region": "Campania",
+        "lat": 40.8717582143,
+        "lng": 14.7336147975
+    },
+    {
+        "region": "Emilia-Romagna",
+        "lat": 44.5394379047,
+        "lng": 10.9941416375
+    },
+    {
+        "region": "Friuli-Venezia Giulia",
+        "lat": 46.0825244849,
+        "lng": 13.1172605681
+    },
+    {
+        "region": "Lazio",
+        "lat": 41.964951279,
+        "lng": 12.9039623102
+    },
+    {
+        "region": "Liguria",
+        "lat": 44.1955543562,
+        "lng": 8.5982069303
+    },
+    {
+        "region": "Lombardia",
+        "lat": 45.5882221855,
+        "lng": 9.5457140489
+    },
+    {
+        "region": "Marche",
+        "lat": 43.3338831555,
+        "lng": 13.2297857136
+    },
+    {
+        "region": "Molise",
+        "lat": 41.6674310882,
+        "lng": 14.54394478
+    },
+    {
+        "region": "Piemonte",
+        "lat": 45.0979469594,
+        "lng": 8.0435281102
+    },
+    {
+        "region": "Puglia",
+        "lat": 40.7113614603,
+        "lng": 17.1310211167
+    },
+    {
+        "region": "Sardegna",
+        "lat": 40.005469212,
+        "lng": 8.9735293188
+    },
+    {
+        "region": "Sicilia",
+        "lat": 37.7265633179,
+        "lng": 14.2949953085
+    },
+    {
+        "region": "Toscana",
+        "lat": 43.5592500265,
+        "lng": 11.0052396957
+    },
+    {
+        "region": "Trentino-Alto Adige",
+        "lat": 46.3401960301,
+        "lng": 11.2474749531
+    },
+    {
+        "region": "Umbria",
+        "lat": 42.898692886,
+        "lng": 12.4670043966
+    },
+    {
+        "region": "Valle d'Aosta",
+        "lat": 45.7274848332,
+        "lng": 7.4553764595
+    },
+    {
+        "region": "Veneto",
+        "lat": 45.5857167311,
+        "lng": 11.7567618616
+    }
+]

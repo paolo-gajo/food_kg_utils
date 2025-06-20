@@ -5,7 +5,10 @@ def clean_suggested_urls(data):
     url_set = set([el['url'] for el in data])
     data_cleaned = []
     for line in data:
-        entry = copy.deepcopy(line)
+        entry = {}
+        for k, v in line.items():
+            if v is not None:
+                entry[k] = v
         sugg_urls = entry.pop('suggested_urls')
         entry['suggested_urls'] = []
         for url in sugg_urls:

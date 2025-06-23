@@ -73,7 +73,7 @@ def main(args):
     batch_size = 4
     dict_output_list = []
     prompt_lang = 'en'
-    example_list = json.load(open(f'./data/examples_{prompt_lang}.json', 'r'))
+    example_list = json.load(open(f'./misc/examples_{prompt_lang}.json', 'r'))
     example = example_list[0]
     prompt_layout = prompt_layout_dict[prompt_lang]
     for i in tqdm(range(0, len(text_list), batch_size)):

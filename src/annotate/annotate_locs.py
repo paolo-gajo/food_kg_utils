@@ -12,7 +12,8 @@ from tqdm.auto import tqdm
 import argparse
 
 def main(args):
-    df = pd.read_json('./data/gz_graph.json')
+    json_path = './data/gz_bilingual_graph.json'
+    df = pd.read_json(json_path)
     text_list = df.to_dict(orient='records')
 
     # model_name = 'meta-llama/Llama-3.1-8B-Instruct'
@@ -54,21 +55,19 @@ def main(args):
 
     prompt_layout_dict = {
     'it': """Dimmi di che paese/regione/città è questa <ricetta> culinaria. Rispondi unicamente nel seguente formato: {example_1}. Usa 'UNK' se uno dei livelli non è specificato, per esempio: {example_2}.\n\nConsidera l'esempio seguente:\n\nTesto: {example_text}\n\n#Response: {example_answer}{eos_token_id_text} \n\nOra rispondi unicamente con un solo (1) dizionario (seguito da `{eos_token_id_text}`) per il testo seguente:\n\nTesto:\n\n<{text_sample}>\n\n# Response: """,
-    'en': """Tell me what country/region/province/city this <recipe> is from, based on the information provided in the text. Answer only with a single dictionary, in the following format: {example_1}. Use "UNK" if any of the levels is not specified, for example: {example_2}.\n\nConsider the following example:\n\nText: {example_text}\n\n#Response: {example_answer}{eos_token_id_text} \n\nNow answer only with a dictionary (and then `{eos_token_id_text}`) for the following text:\n\nText:\n\n<{text_sample}>\n\n#Response: """,
+    'en': """Tell me what country/region/province/city this <recipe> is from, based on the information provided in the text. Answer only with a single dictionary, in the following format: {example_1}. Use "UNK" if any of the levels is not specified, for example: {example_2}.\n\nNow answer only with a dictionary (followed by `{eos_token_id_text}`) for the following text:\n\nText:\n\n<{text_sample}>\n\n#Response: """,
     }
-
+    # \n\nConsider the following example:\n\nText: {example_text}\n\n#Response: {example_answer}{eos_token_id_text} 
     example_dict = {
         'it': r'{"paese": "Italia", "regione": "Campania", "provincia": "Napoli", "città": "Napoli"}',
-        'en': r'''{"country": "Italy", "region": "Campania", "province": "Naples", "city": "Naples"},
-        {"country": "United States", "region": "Texas", "province": "Texas", "city": "Dallas"},
-        {"country": "Japan", "region": "Kanto", "province": "Tokyo", "city": "Tokyo"}'''
+        'en': r'''{"country": "country_name", "region": "region_name", "province": "province_name", "city": "city_name"}'''
         }
     example_dict_unk = {
         'it': r'{"paese": "Italia", "regione": "UNK", "provincia": "UNK", "città": "UNK"}',
         'en': r'''{"country": "UNK", "region": "UNK", "province": "UNK", "city": "UNK"},
-        {"country": "Italy", "region": "UNK", "province": "UNK", "city": "UNK"},
-        {"country": "United States", "region": "Texas", "province": "Texas", "city": "UNK"},
-        {"country": "Japan", "region": "Kanto", "province": "UNK", "city": "UNK"}'''
+        {"country": "country_name", "region": "UNK", "province": "UNK", "city": "UNK"},
+        {"country": "country_name", "region": "region_name", "province": "province_name", "city": "UNK"},
+        {"country": "country_name", "region": "region_name", "province": "UNK", "city": "UNK"}'''
         }
 
     batch_size = 4
@@ -81,7 +80,7 @@ def main(args):
         text_batch = text_list[i:i+batch_size]
         prompt_batch = []
         for text_sample in text_batch:
-            text_sample = text_sample['presentation'].split('\n')[0]
+            text_sample = text_sample['presentation_en']#.split('\n')[0]
             prompt = prompt_layout.format(example_1 = example_dict[prompt_lang],
                                             example_2 = example_dict_unk[prompt_lang],
                                             example_text = example['example'],
@@ -94,7 +93,7 @@ def main(args):
 
         output = model.generate(**tokenized_texts,
                                 cache_implementation="static",
-                                max_new_tokens = 1000,
+                                max_new_tokens = 100,
                                 eos_token_id=tokenizer.eos_token_id)
         for b in range(output.shape[0]):
             dict_output = text_batch[b]
@@ -108,12 +107,9 @@ def main(args):
                 dict_output.update(dict_country)
             else:
                 raise TypeError('Evaluated string did not become dict.')
-            # dict_output['loc'] = dict_string
             dict_output_list.append(dict_output)
 
-    json_path = f"./data/gz_graph_{model_name.split('/')[-1]}.json"
-
-    with open(json_path, 'w', encoding='utf8') as f:
+    with open(json_path.replace('.json', f"_{model_name.split('/')[-1]}.json"), 'w', encoding='utf8') as f:
         json.dump(dict_output_list, f, ensure_ascii = False, indent = 4)
 
 if __name__ == "__main__":

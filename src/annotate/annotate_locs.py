@@ -52,6 +52,11 @@ def main(args):
     )
     model.generation_config.pad_token_id = tokenizer.pad_token_id
 
+    prompt_layout_dict = {
+    'it': """Dimmi di che paese/regione/città è questa <ricetta> culinaria. Rispondi unicamente nel seguente formato: {example_1}. Usa 'UNK' se uno dei livelli non è specificato, per esempio: {example_2}.\n\nConsidera l'esempio seguente:\n\nTesto: {example_text}\n\n#Response: {example_answer}{eos_token_id_text} \n\nOra rispondi unicamente con un solo (1) dizionario (seguito da `{eos_token_id_text}`) per il testo seguente:\n\nTesto:\n\n<{text_sample}>\n\n# Response: """,
+    'en': """Tell me what country/region/province/city this <recipe> is from, based on the information provided in the text. Answer only with a single dictionary, in the following format: {example_1}. Use "UNK" if any of the levels is not specified, for example: {example_2}.\n\nConsider the following example:\n\nText: {example_text}\n\n#Response: {example_answer}{eos_token_id_text} \n\nNow answer only with a dictionary (and then `{eos_token_id_text}`) for the following text:\n\nText:\n\n<{text_sample}>\n\n#Response: """,
+    }
+
     example_dict = {
         'it': r'{"paese": "Italia", "regione": "Campania", "provincia": "Napoli", "città": "Napoli"}',
         'en': r'''{"country": "Italy", "region": "Campania", "province": "Naples", "city": "Naples"},
@@ -60,7 +65,8 @@ def main(args):
         }
     example_dict_unk = {
         'it': r'{"paese": "Italia", "regione": "UNK", "provincia": "UNK", "città": "UNK"}',
-        'en': r'''{"country": "Italy", "region": "UNK", "province": "UNK", "city": "UNK"},
+        'en': r'''{"country": "UNK", "region": "UNK", "province": "UNK", "city": "UNK"},
+        {"country": "Italy", "region": "UNK", "province": "UNK", "city": "UNK"},
         {"country": "United States", "region": "Texas", "province": "Texas", "city": "UNK"},
         {"country": "Japan", "region": "Kanto", "province": "UNK", "city": "UNK"}'''
         }

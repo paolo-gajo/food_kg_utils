@@ -10,9 +10,10 @@ import re
 from src.utils import prompt_layout_dict
 from tqdm.auto import tqdm
 import argparse
+torch.set_float32_matmul_precision('high')
 
 def main(args):
-    json_path = './data/gz_bilingual_graph.json'
+    json_path = './data/gz_dataset.json'
     df = pd.read_json(json_path)
     text_list = df.to_dict(orient='records')
 
@@ -55,25 +56,31 @@ def main(args):
 
     prompt_layout_dict = {
     'it': """Di seguito è riportata una ricetta con un numero per ogni passaggio. Crea un elenco di singoli passaggi per ognuno dei numeri.""",
-    'en': """Below is a recipe with step numbers. Make a list of single self-contained steps for each of those numbers.\n\n{text_sample}""",
+    'en': """Below is a recipe with step numbers. Make a list of single self-contained steps for each of those numbers. The maximum number of steps you produce needs to match the last step number in the recipe. Only output the list without adding any comments.\n\n{text_sample}""",
     }
 
-    batch_size = 4
+    batch_size = 1
     dict_output_list = []
     prompt_lang = 'en'
     prompt_layout = prompt_layout_dict[prompt_lang]
+    sys_prompt = 'You are an AI specialized in extracting information from texts.'
     for i in tqdm(range(0, len(text_list), batch_size)):
         text_batch = text_list[i:i+batch_size]
         prompt_batch = []
         for text_sample in text_batch:
-            text_sample = ' '.join(text_sample['steps_it'])
+            text_sample = ' '.join(text_sample[f'steps_{prompt_lang}'])
             prompt = prompt_layout.format(text_sample = text_sample, eos_token_id_text=eos_token_id_text,)
+            prompt = [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": prompt},
+            ]
+            prompt = tokenizer.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)
             prompt_batch.append(prompt)
             tokenized_texts = tokenizer(prompt_batch, return_tensors="pt", padding = True, truncation = True).to("cuda")
 
         output = model.generate(**tokenized_texts,
                                 cache_implementation="static",
-                                max_new_tokens = 100,
+                                max_new_tokens = 1000,
                                 eos_token_id=tokenizer.eos_token_id)
         for b in range(output.shape[0]):
             dict_output = text_batch[b]

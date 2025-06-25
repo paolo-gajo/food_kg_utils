@@ -33,6 +33,7 @@ class Recipe:
         self.img_count_en = 0
         self.other = []
         self.id = id
+        self.num_splits = 3
 
 class Scraper:
     def __init__(self, save_dir: str):
@@ -114,7 +115,6 @@ class Scraper:
         steps_container = soup.select("div.gz-content-recipe.gz-mBottom4x div.gz-content-recipe-step")
         for j, step_block in enumerate(steps_container):
             p_tag_step_list = step_block.find_all("p")
-            num_splits = 0
             content_list = []
             for p_tag in p_tag_step_list:
                 if p_tag:
@@ -139,8 +139,8 @@ class Scraper:
             if img_elem_full:
                 img_elem = img_elem_full.select_one('img')
                 step_img_url_full = img_elem.attrs['src']
-                if num_splits == 0:
-                    ...
+                if recipe.num_splits != 3:
+                    print(f'Check recipe {recipe.id} (num_splits != 3)')
                 self.download_full_step(step_img_url_full, recipe, lang, num_splits)
             else:
                 img_elem_single_list = step_block.select('div.gz-content-recipe-step-img-container picture.gz-content-recipe-step-img.gz-content-recipe-step-img-single')

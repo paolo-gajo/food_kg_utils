@@ -1,3 +1,4 @@
 models/
 .env
 *.pyc
+data/imgs

@@ -114,6 +114,7 @@ class Scraper:
         # steps
         steps_container = soup.select("div.gz-content-recipe.gz-mBottom4x div.gz-content-recipe-step")
         for j, step_block in enumerate(steps_container):
+            step_set = set()
             p_tag_step_list = step_block.find_all("p")
             content_list = []
             for p_tag in p_tag_step_list:
@@ -126,8 +127,9 @@ class Scraper:
                             break
                     for i in range(len(contents)):
                         if contents[i].name == 'span' and 'class' in contents[i].attrs.keys() and 'num-step' in contents[i].attrs['class']:
-                            contents[i] = f'<{contents[i].text}>'
-                            num_splits += 1
+                            step_tag = f'<{contents[i].text}>'
+                            contents[i] = step_tag
+                            step_set.add(step_tag)
                         elif isinstance(contents[i], bs4.element.Tag):
                             contents[i] = contents[i].text
                     # step_text = p_tag.get_text(" ", strip=True)
@@ -139,9 +141,9 @@ class Scraper:
             if img_elem_full:
                 img_elem = img_elem_full.select_one('img')
                 step_img_url_full = img_elem.attrs['src']
-                if recipe.num_splits != 3:
-                    print(f'Check recipe {recipe.id} (num_splits != 3)')
-                self.download_full_step(step_img_url_full, recipe, lang, num_splits)
+                if len(step_set) != recipe.num_splits:
+                    print(f"Check recipe {recipe.id}: {getattr(recipe, f'url_{lang}')} (num_splits != 3)", flush=True)
+                self.download_full_step(step_img_url_full, recipe, lang, recipe.num_splits)
             else:
                 img_elem_single_list = step_block.select('div.gz-content-recipe-step-img-container picture.gz-content-recipe-step-img.gz-content-recipe-step-img-single')
                 for img_elem_single in img_elem_single_list:

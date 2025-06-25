@@ -1,15 +1,15 @@
 #!/bin/bash
-#SBATCH -J run
+#SBATCH -J gnn
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gres=gpu:h100:1
-#SBATCH --time=12:00:00
-#SBATCH --output=./.slurm/%A_%a_output.log
-#SBATCH --error=./.slurm/%A_%a_error.log
-#SBATCH --mem=64G
+#SBATCH --time=00:00:00
+#SBATCH --output=./.slurm/%j_output.log
+#SBATCH --error=./.slurm/%j_error.log
+#SBATCH --mem=64g
+# SBATCH --gres=gpu:1
 
-mkdir -p .slurm
+# mkdir -p .slurm
 nvidia-smi
-source .env_food_recommender/bin/activate
+. .env/bin/activate
 
-python3 $1
+python ./src/scrape/scrape.py 

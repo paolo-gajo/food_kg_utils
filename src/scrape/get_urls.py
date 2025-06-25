@@ -3,20 +3,53 @@ from bs4 import BeautifulSoup
 import time
 from tqdm.auto import tqdm
 import json
+import os
 
-def extract_urls(base_url, max_pages, min_pages = 1, region = ''):
+region_list = [
+    "Abruzzo",
+    "Basilicata",
+    "Calabria",
+    "Campania",
+    "Emilia-Romagna",
+    "Friuli-Venezia Giulia",
+    "Lazio",
+    "Liguria",
+    "Lombardia",
+    "Marche",
+    "Molise",
+    "Piemonte",
+    "Puglia",
+    "Sardegna",
+    "Sicilia",
+    "Toscana",
+    "Trentino-Alto Adige",
+    "Umbria",
+    "Valle d'Aosta",
+    "Veneto"
+    ]
+
+def extract_urls(base_url, min_pages = 1, region = ''):
     urls = []
+    url_layout = base_url + r"page{page}/"
+    if region:
+        url_layout += r'regionali/{region}'
+    url_first = url_layout.format(page=str(1), region=region)
+    resp = requests.get(url_first)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    page_list_block = soup.select_one('div.gz-nums')
+    if page_list_block:
+        max_pages_block = page_list_block.select_one('span.disabled.total-pages')
+        if max_pages_block:
+            max_pages = int(max_pages_block.text)
+        else:
+            page_list = page_list_block.select('div.gz-pages a.page')
+            max_pages = int(page_list[-1].text)
+    else:
+        max_pages = 1
     pbar = tqdm(range(min_pages, max_pages + 1))
     for page in pbar:
-        if page == 1:
-            url = base_url
-        else:
-            url = f"{base_url}page{page}/"
-        
-        if region:
-            url += f'regionali/{region}'
-
-        # print(f"Scraping: {url}")
+        url = url_layout.format(page=page, region=region)
         response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
         
         if response.status_code != 200:
@@ -37,27 +70,27 @@ def extract_urls(base_url, max_pages, min_pages = 1, region = ''):
     return urls
 
 if __name__ == "__main__":
-    BASE_URL = "https://www.giallozafferano.it/ricette-cat/"
-    MIN_PAGES = 1  # Last page
-    MAX_PAGES = 10000  # Last page
-    
-    # extracted_urls = extract_urls(BASE_URL, MAX_PAGES, MIN_PAGES)
-    
-    # # Save to file
-    # with open("./data/extracted_urls.txt", "w") as f:
-    #     for url in extracted_urls:
-    #         f.write(url + "\n")
+    base_url = "https://www.giallozafferano.it/ricette-cat/"
+    new_list = 0
+    misc_dir = "./misc"
+    gz_urls_path = os.path.join(misc_dir, 'gz_urls.txt')
+    if new_list:        
+        extracted_urls = extract_urls(base_url, min_pages=1)
+        # Save to file
+        with open(gz_urls_path, "w") as f:
+            for url in extracted_urls:
+                f.write(url + "\n")
+    else:
+        extracted_urls = [el.strip() for el in open(gz_urls_path, 'r').readlines()]
 
-    # print(f"Extracted {len(extracted_urls)} URLs. Saved to extracted_urls.txt")
+    print(f"Extracted {len(extracted_urls)} URLs. Saved to extracted_urls.txt")
 
     url_dict = {}
-
-    region_list = json.load(open('./data/region_coords.json', 'r'))
+    
     for entry in region_list:
-        rgn = entry['region'].replace(' ', '-').replace("'", "-")
-        extracted_urls = extract_urls(BASE_URL, MAX_PAGES, MIN_PAGES, region = rgn)
+        rgn = entry.replace(' ', '-').replace("'", "-")
+        extracted_urls = extract_urls(base_url, min_pages=1, region=rgn)
         url_dict[rgn] = extracted_urls
     
-
-    with open('./data/extracted_urls.json', 'w', encoding='utf8') as f:
+    with open(os.path.join(misc_dir, 'gz_regional_urls.json'), 'w', encoding='utf8') as f:
         json.dump(url_dict, f, ensure_ascii = False, indent = 4)

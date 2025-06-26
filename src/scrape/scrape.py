@@ -11,7 +11,7 @@ import os
 from PIL import Image
 import numpy as np
 from io import BytesIO
-from typing import List
+from typing import List, Dict
 
 class Recipe:
     def __init__(self, id):
@@ -94,7 +94,7 @@ class Scraper:
         if pres_img_container:
             pres_img_url = pres_img_container.attrs['src']
             title = pres_img_url.split('/')[-1]
-            filename = os.path.join('imgs', str(recipe.id), lang, 'presentation', title)
+            filename = os.path.join(str(recipe.id), 'imgs', lang, 'presentation', title)
             savename = os.path.join(self.save_dir, filename)
             setattr(recipe, f'presentation_{lang}_img_path', savename)
             os.makedirs(os.path.dirname(savename), exist_ok=True)
@@ -130,6 +130,8 @@ class Scraper:
                             step_set.add(step_tag)
                         elif isinstance(flattened[i], bs4.element.Tag):
                             flattened_formatted.append(flattened[i].text)
+                        else:
+                            flattened_formatted.append(flattened[i])
                     
             if not any(['<' in el for el in flattened_formatted]):
                 ...
@@ -191,7 +193,7 @@ class Scraper:
         title = url.split('/')[-1]
         img_count_field = f'img_count_{lang}'
         img_count = getattr(recipe, img_count_field)
-        filename = os.path.join('imgs', str(recipe.id), lang, 'steps', f'{img_count}_{title}')    
+        filename = os.path.join(str(recipe.id), 'imgs', lang, 'steps', f'{img_count}_{title}')    
         savename = os.path.join(self.save_dir, filename)
         os.makedirs(os.path.dirname(savename), exist_ok=True)
         
@@ -224,7 +226,7 @@ class Scraper:
         for i in range(num_splits):
             img_array_split = img_array[:,i*w_split:(i+1)*w_split:,:]
             # title = re.sub(img_range, str(i), title)
-            filename = os.path.join('imgs', str(recipe.id), lang, 'steps', f'{img_count + counter}_{title}')    
+            filename = os.path.join(str(recipe.id), 'imgs', lang, 'steps', f'{img_count + counter}_{title}')    
             savename = os.path.join(self.save_dir, filename)
             img_path_list.append(savename)
             os.makedirs(os.path.dirname(savename), exist_ok=True)
@@ -289,7 +291,25 @@ class Scraper:
             recipe.steps_en = en_data["steps"]
             recipe.presentation_urls_en = recipe.presentation_urls_en | en_data["presentation_urls"]
             recipe.related_urls_en = recipe.related_urls_en | en_data["related_urls"]
+        
+        self.save_recipe(self.make_recipe_dict(recipe))
         return recipe
+
+    def make_recipe_dict(self, recipe):
+        serializable_dict = {}
+        for k, v in recipe.__dict__.items():
+            if isinstance(v, set):
+                serializable_dict[k] = list(v)
+            else:
+                serializable_dict[k] = v
+        return serializable_dict
+
+    def save_recipe(self, recipe: Dict):
+        filename = os.path.join(str(recipe['id']), 'recipe', f"{str(recipe['id'])}_{recipe['title_it']}.json")
+        savename = os.path.join(self.save_dir, filename)
+        os.makedirs(os.path.dirname(savename), exist_ok=True)
+        with open(savename, 'w', encoding='utf8') as f:
+            json.dump(recipe, f, ensure_ascii = False, indent = 4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A program to scrape recipes from GialloZafferano.it")
@@ -301,7 +321,7 @@ if __name__ == "__main__":
     if args.num_recipes:
         urls = urls[:args.num_recipes]
     
-    save_dir = './data'
+    save_dir = './data/gz_dataset'
     scraper = Scraper(save_dir=save_dir)
 
     # all_data = []
@@ -310,10 +330,10 @@ if __name__ == "__main__":
     #     all_data = [dict(res) for res in futures if res is not None]
     all_data = []
     for i, url in tqdm(enumerate(urls), total=len(urls)):
-        out = scraper.scrape_one(url, i)
-        out = out.__dict__
-        if out:
-            all_data.append(out)
+        scraped_recipe = scraper.scrape_one(url, i)
+        scraped_recipe_dict = scraper.make_recipe_dict(scraped_recipe)
+        if scraped_recipe_dict:
+            all_data.append(scraped_recipe_dict)
 
     with open("./data/gz_raw.json", "w", encoding="utf-8") as f:
         json.dump(all_data, f, indent=2, ensure_ascii=False)

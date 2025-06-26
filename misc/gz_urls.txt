@@ -13,7 +13,6 @@ https://ricette.giallozafferano.it/Polpette-al-sugo.html
 https://ricette.giallozafferano.it/Couscous-alle-verdure.html
 https://ricette.giallozafferano.it/Focaccia-fugassa-alla-genovese.html
 https://ricette.giallozafferano.it/Pasta-alla-gricia.html
-https://ricette.giallozafferano.it/Pasta-alla-gricia.html
 https://ricette.giallozafferano.it/Besciamella.html
 https://ricette.giallozafferano.it/Spaghetti-alle-vongole.html
 https://ricette.giallozafferano.it/Brownies.html
@@ -177,7 +176,6 @@ https://ricette.giallozafferano.it/Pollo-arrosto.html
 https://ricette.giallozafferano.it/Pizzoccheri-alla-valtellinese.html
 https://ricette.giallozafferano.it/Torta-salata-di-zucchine.html
 https://ricette.giallozafferano.it/Torta-rustica-salata.html
-https://ricette.giallozafferano.it/Omelette-ricetta-base.html
 https://ricette.giallozafferano.it/Omelette-ricetta-base.html
 https://ricette.giallozafferano.it/Mozzarella-in-carrozza.html
 https://ricette.giallozafferano.it/Pavlova.html
@@ -7529,9 +7527,7 @@ https://ricette.giallozafferano.it/Torta-salata-con-ricotta-e-asparagi.html
 https://ricette.giallozafferano.it/Risotto-alla-parmigiana-di-melanzane.html
 https://ricette.giallozafferano.it/Merluzzo-fritto.html
 https://ricette.giallozafferano.it/Hugo-spritz.html
-https://ricette.giallozafferano.it/Risotto-al-lampredotto.html
 https://ricette.giallozafferano.it/Mini-plumcake-zucchine-e-formaggio.html
 https://ricette.giallozafferano.it/Crostata-con-crema-e-ciliegie.html
 https://ricette.giallozafferano.it/Cupcake-cioccolato-e-ciliegie.html
 https://ricette.giallozafferano.it/Quinoa-con-zucchine-e-formaggio.html
-https://ricette.giallozafferano.it/Risotto-alla-parmigiana-di-melanzane.html

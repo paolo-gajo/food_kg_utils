@@ -11,6 +11,7 @@ import os
 from PIL import Image
 import numpy as np
 from io import BytesIO
+from typing import List
 
 class Recipe:
     def __init__(self, id):
@@ -113,27 +114,26 @@ class Scraper:
 
         # steps
         steps_container = soup.select("div.gz-content-recipe.gz-mBottom4x div.gz-content-recipe-step")
-        for j, step_block in enumerate(steps_container):
+        for step_block in steps_container:
             step_set = set()
             p_tag_step_list = step_block.find_all("p")
             content_list = []
+            flattened_formatted = []
             for p_tag in p_tag_step_list:
                 if p_tag:
                     contents = p_tag.contents
-                    while len(contents) == 1:
-                        if isinstance(contents[0], bs4.element.Tag):
-                            contents = contents[0].contents
-                        elif isinstance(contents[0], str):
-                            break
-                    for i in range(len(contents)):
-                        if contents[i].name == 'span' and 'class' in contents[i].attrs.keys() and 'num-step' in contents[i].attrs['class']:
-                            step_tag = f'<{contents[i].text}>'
-                            contents[i] = step_tag
+                    flattened = self.flatten_contents(contents)
+                    for i in range(len(flattened)):
+                        if flattened[i].name == 'span' and 'class' in flattened[i].attrs.keys() and 'num-step' in flattened[i].attrs['class']:
+                            step_tag = f'<{flattened[i].text}>'
+                            flattened_formatted.append(step_tag)
                             step_set.add(step_tag)
-                        elif isinstance(contents[i], bs4.element.Tag):
-                            contents[i] = contents[i].text
-                    # step_text = p_tag.get_text(" ", strip=True)
-                    content_list += contents
+                        elif isinstance(flattened[i], bs4.element.Tag):
+                            flattened_formatted.append(flattened[i].text)
+                    
+            if not any(['<' in el for el in flattened_formatted]):
+                ...
+            content_list += flattened_formatted
             step_text = ' '.join(content_list)
             step_text = re.sub('\s+', ' ', step_text)
             data["steps"].append(step_text)
@@ -142,18 +142,17 @@ class Scraper:
                 img_elem = img_elem_full.select_one('img')
                 step_img_url_full = img_elem.attrs['src']
                 if len(step_set) != recipe.num_splits:
-                    print(f"Check recipe {recipe.id}: {getattr(recipe, f'url_{lang}')} (num_splits != 3)", flush=True)
+                    print(f"Check recipe {recipe.id}: {getattr(recipe, f'url_{lang}')} (num_splits != 3), set: {step_set}", flush=True)
                 self.download_full_step(step_img_url_full, recipe, lang, recipe.num_splits)
             else:
                 img_elem_single_list = step_block.select('div.gz-content-recipe-step-img-container picture.gz-content-recipe-step-img.gz-content-recipe-step-img-single')
                 for img_elem_single in img_elem_single_list:
-                    # step = int(img_elem_single.attrs['data-step']) - 1
                     img_elem = img_elem_single.select_one('img')
                     step_img_url_single = img_elem.attrs['src']
                     self.download_single_steps(step_img_url_single, recipe, lang)
 
         # related urls
-        related_container_1 = soup.select("div.gz-swiper-element-shadowed.gz-mBottom3   x div.gz-related-swiper")
+        related_container_1 = soup.select("div.gz-swiper-element-shadowed.gz-mBottom3x div.gz-related-swiper")
         for related_block in related_container_1:
             if related_block.attrs['data-swipername'] == 'gz-related-swiper':
                 rel_url_elem_list = related_block.find_all('a')
@@ -173,6 +172,18 @@ class Scraper:
                         data['related_urls'].add(rel_url_string)
 
         return data
+
+    def flatten_contents(self, content_list: List):
+        flattened = []
+        for cont in content_list:
+            children = list(cont.children) if hasattr(cont, 'children') else None
+            if not hasattr(cont, 'contents') or not any([hasattr(el, 'contents') for el in children]):
+                flattened.append(cont)
+            else:
+                prev_flat = self.flatten_contents(cont)
+                assert isinstance(prev_flat, list)
+                flattened += prev_flat
+        return flattened 
 
     def download_single_steps(self, url, recipe, lang):
         if not url.startswith('https'):

@@ -12,6 +12,8 @@ from PIL import Image
 import numpy as np
 from io import BytesIO
 from typing import List, Dict
+import cv2
+from pathlib import Path
 
 class Recipe:
     def __init__(self, id):
@@ -59,8 +61,14 @@ class Scraper:
 
     def download_file(self, url):
         response = requests.get(url)
-        response.raise_for_status()
-        return response.content
+        if response.status_code == 403:
+            img_white = np.ones((50, 50, 3), dtype=np.uint8) * 255
+            success, encoded_image = cv2.imencode('.png', img_white)
+            content = encoded_image.tobytes()
+            return content, 1
+        else:
+            response.raise_for_status()
+            return response.content, 0
 
     def _parse_recipe_page(self, soup, recipe, lang):
         """Parses the core components of a GZ recipe soup into a partial dictionary."""
@@ -93,12 +101,14 @@ class Scraper:
         pres_img_container = soup.select_one('picture.gz-featured-image img')
         if pres_img_container:
             pres_img_url = pres_img_container.attrs['src']
+            content, dl_failed = self.download_file(pres_img_url)
             title = pres_img_url.split('/')[-1]
+            title = f'failed_{title}' if dl_failed else title
             filename = os.path.join(str(recipe.id), 'imgs', lang, 'presentation', title)
+            filename = self.ensure_extension(filename)
             savename = os.path.join(self.save_dir, filename)
             setattr(recipe, f'presentation_{lang}_img_path', savename)
             os.makedirs(os.path.dirname(savename), exist_ok=True)
-            content = self.download_file(pres_img_url)
             with open(savename, 'wb') as f:
                 f.write(content)
 
@@ -190,14 +200,18 @@ class Scraper:
     def download_single_steps(self, url, recipe, lang):
         if not url.startswith('https'):
             url = 'https://ricette.giallozafferano.it' + url
+        content, dl_failed = self.download_file(url)
+        
         title = url.split('/')[-1]
+        if dl_failed:
+            title = f'failed_{title}'
         img_count_field = f'img_count_{lang}'
         img_count = getattr(recipe, img_count_field)
         filename = os.path.join(str(recipe.id), 'imgs', lang, 'steps', f'{img_count}_{title}')    
+        filename = self.ensure_extension(filename)
         savename = os.path.join(self.save_dir, filename)
         os.makedirs(os.path.dirname(savename), exist_ok=True)
         
-        content = self.download_file(url)
         with open(savename, 'wb') as f:
             f.write(content)
 
@@ -208,15 +222,24 @@ class Scraper:
         current += [savename]
         setattr(recipe, attr_name, current)
 
+    def ensure_extension(self, filename: str, extension = 'jpg'):
+        if not Path(filename).suffix:
+            filename += f'.{extension}'
+        return filename
+
     def download_full_step(self, url, recipe, lang, num_splits):
         if not url.startswith('https'):
             url = 'https://ricette.giallozafferano.it' + url
-        title = url.split('/')[-1]
         
-        # self.download_file(url, recipe=recipe, section=f'steps/{j}', lang=lang)
-        content = self.download_file(url)
+        content, dl_failed = self.download_file(url)
+        
+        title = url.split('/')[-1]
+        title = f'failed_{title}' if dl_failed else title
+
         img = Image.open(BytesIO(content))
         img_array = np.asarray(img, dtype=np.uint8)
+        if len(img_array.shape) < 3:
+            img_array = img_array[..., np.newaxis]
         w_split = img_array.shape[1] // num_splits
         img_path_list = []
 
@@ -227,6 +250,7 @@ class Scraper:
             img_array_split = img_array[:,i*w_split:(i+1)*w_split:,:]
             # title = re.sub(img_range, str(i), title)
             filename = os.path.join(str(recipe.id), 'imgs', lang, 'steps', f'{img_count + counter}_{title}')    
+            filename = self.ensure_extension(filename)
             savename = os.path.join(self.save_dir, filename)
             img_path_list.append(savename)
             os.makedirs(os.path.dirname(savename), exist_ok=True)

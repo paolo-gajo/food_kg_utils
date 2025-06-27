@@ -1,5 +1,6 @@
 import torch
 from typing import List
+import json
 
 prompt_layout_dict = {
     'it': """Dimmi di che paese/regione/città è questa <ricetta> culinaria. Rispondi unicamente nel seguente formato: {example_1}. Usa 'UNK' se uno dei livelli non è specificato, per esempio: {example_2}.\n\nConsidera l'esempio seguente:\n\nTesto: {example_text}\n\n#Response: {example_answer}{eos_token_id_text} \n\nOra rispondi unicamente con un solo (1) dizionario (seguito da `{eos_token_id_text}`) per il testo seguente:\n\nTesto:\n\n<{text_sample}>\n\n# Response: """,
@@ -10,9 +11,15 @@ def get_edge_index(data: List):
     edge_index = [[], []]
 
     for line in data:
-        src = [line['index']] * len(line['dest'])
+        src = [line['id']] * len(line['dest'])
         edge_index[0] += src
         edge_index[1] += line['dest']
     edge_index = torch.Tensor(edge_index).to(torch.long)    
     return edge_index
 
+def load_json(path: str):
+    return json.load(open(path, 'r', encoding='utf8'))
+
+def dump_json(obj, path):    
+    with open(path, 'w', encoding='utf8') as f:
+        json.dump(obj, f, ensure_ascii = False, indent = 4)

@@ -1,0 +1,23 @@
+{
+    "Abruzzo": 0,
+    "Basilicata": 1,
+    "Calabria": 2,
+    "Campania": 3,
+    "Emilia_Romagna": 4,
+    "Friuli_Venezia_Giulia": 5,
+    "Lazio": 6,
+    "Liguria": 7,
+    "Lombardia": 8,
+    "Marche": 9,
+    "Molise": 10,
+    "Piemonte": 11,
+    "Puglia": 12,
+    "Sardegna": 13,
+    "Sicilia": 14,
+    "Toscana": 15,
+    "Trentino_Alto_Adige": 16,
+    "Umbria": 17,
+    "Valle_d_Aosta": 18,
+    "Veneto": 19,
+    "UNK": 20
+}
